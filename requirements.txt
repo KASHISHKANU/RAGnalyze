@@ -1,0 +1,16 @@
+streamlit
+langchain
+langchain-community
+langchain-openai
+openai
+faiss-cpu
+unstructured
+python-dotenv
+validators
+nltk
+rouge-score
+yt-dlp
+tiktoken
+langchain-text-splitters
+rank_bm25
+youtube-transcript-api
