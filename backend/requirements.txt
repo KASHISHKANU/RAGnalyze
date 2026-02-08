@@ -14,3 +14,12 @@ tiktoken
 langchain-text-splitters
 rank_bm25
 youtube-transcript-api
+fastapi
+uvicorn
+dill 
+mlflow
+langchain-groq
+ollama
+ragas
+datasets
+python-multipart

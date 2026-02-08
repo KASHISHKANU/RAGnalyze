@@ -37,10 +37,13 @@ def run_rag(
         doc.page_content for doc in retrieved_docs if doc.page_content
     )
 
-    llm = ChatOpenAI(
-        model=model,
-        temperature=temperature
+    from llms.llm_factory import get_llm
+
+    llm = get_llm(
+    model_name=model,
+    temperature=temperature
     )
+  
 
     chain = prompt | llm | StrOutputParser()
     start = time.time()
@@ -53,3 +56,42 @@ def run_rag(
     latency = time.time() - start
 
     return answer, context, latency, retrieved_docs
+
+def run_rag_stream(
+    retriever,
+    prompt,
+    question: str,
+    model: str,
+    temperature: float = 0.0
+):
+    """
+    Streaming RAG pipeline:
+    Yields tokens as they are generated
+    """
+
+    from llms.llm_factory import get_llm
+
+    retrieved_docs = retriever(question)
+
+    if not retrieved_docs:
+        yield "No relevant context found."
+        return
+
+    context = "\n\n".join(
+        doc.page_content for doc in retrieved_docs if doc.page_content
+    )
+
+    llm = get_llm(
+        model_name=model,
+        temperature=temperature
+    )
+
+    chain = prompt | llm
+
+    for chunk in chain.stream({
+        "context": context,
+        "question": question
+    }):
+        if chunk.content:
+            yield chunk.content
+

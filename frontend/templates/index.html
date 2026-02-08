@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RAGnalyze</title>
+    <link rel="stylesheet" href="/static/style.css">
+
+    <style>
+        .result-box {
+            background: #f1f1f1;
+            padding: 12px;
+            margin-top: 15px;
+            border-radius: 6px;
+            min-height: 80px;
+            white-space: pre-wrap;
+        }
+
+        .stream-btn {
+            margin-top: 10px;
+            background: #28a745;
+        }
+
+        .stream-btn:hover {
+            background: #218838;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>🎥 RAGnalyze – YouTube RAG Analyzer</h1>
+
+    <form action="/analyze-ui" method="post">
+
+        <!-- URL -->
+        <input
+            type="text"
+            name="url"
+            placeholder="YouTube URL"
+            required
+        >
+
+        <!-- Question -->
+        <textarea
+            name="question"
+            placeholder="Ask a question about the video..."
+            required
+        ></textarea>
+
+        <!-- Model Selection -->
+        <h3>Select Model (for streaming)</h3>
+        {% for model in models %}
+            <label>
+                <input
+                    type="radio"
+                    name="models"
+                    value="{{ model }}"
+                    {% if loop.first %}checked{% endif %}
+                >
+                {{ model }}
+            </label><br>
+        {% endfor %}
+
+        <!-- Streaming Button -->
+        <button
+            type="button"
+            class="stream-btn"
+            onclick="startStreaming()"
+        >
+            ▶ Stream Answer
+        </button>
+
+        <!-- Streaming Output -->
+        <div id="stream-box" class="result-box"></div>
+
+        <!-- Full Analysis -->
+        <button type="submit">
+            Run Full RAG Analysis 🚀
+        </button>
+    </form>
+</div>
+
+<script>
+async function startStreaming() {
+    const urlInput = document.querySelector("input[name='url']");
+    const questionInput = document.querySelector("textarea[name='question']");
+    const modelInput = document.querySelector("input[name='models']:checked");
+    const streamBox = document.getElementById("stream-box");
+
+    if (!urlInput.value || !questionInput.value || !modelInput) {
+        alert("Please enter URL, question, and select a model.");
+        return;
+    }
+
+    streamBox.innerText = "Streaming answer...\n\n";
+
+    const response = await fetch("/stream-answer", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: new URLSearchParams({
+            url: urlInput.value,
+            question: questionInput.value,
+            model: modelInput.value
+        })
+    });
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+
+    while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        streamBox.innerText += decoder.decode(value);
+    }
+}
+</script>
+
+</body>
+</html>
